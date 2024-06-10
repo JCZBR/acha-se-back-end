@@ -1,9 +1,18 @@
 import fastify from 'fastify'
+import multipart from '@fastify/multipart'
+import cors from '@fastify/cors'
 
 const server = fastify()
 
-server.get('/ping', async (request, reply) => {
-  return 'pong\n'
+server.register(cors, {
+  origin: '*',
+  methods: ['GET', 'PUT', 'POST', 'DELETE'],
+})
+
+server.register(multipart, {
+  limits: {
+    fileSize: 1024000000,
+  },
 })
 
 server.listen({ port: 8080 }, (err, address) => {

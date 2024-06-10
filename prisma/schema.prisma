@@ -20,3 +20,26 @@ model User {
   phoneNumber String @unique
   password    String
 }
+
+model Objects {
+  id       String   @id @default(uuid())
+  name     String
+  color    String
+  value    String
+  brand    String
+  date     DateTime
+  local    String
+  category Category
+  imageUrl String?
+}
+
+enum Category {
+  ELETRONIC
+  CUPS_AND_BOTTLES
+  MATERIALS_AND_BAGS
+  ACCESSORIES
+  CLOTHES
+  CHARGERS_AND_CABLES
+  DOCUMENTS
+  OTHERS
+}

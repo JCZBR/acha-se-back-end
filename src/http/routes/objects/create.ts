@@ -1,0 +1,65 @@
+import { FastifyReply, FastifyRequest } from "fastify";
+import z from "zod";
+import { Category } from '@prisma/client'
+import { Upload } from "@aws-sdk/lib-storage";
+import { r2 } from "../../../lib/cloudflare";
+import { prisma } from "../../../lib/prisma";
+
+export async function handleCreateObject(req: FastifyRequest, res: FastifyReply) {
+  const parts = req.parts()
+
+  const objectBody = z.object({
+    name: z.string(),
+    color: z.string(),
+    value: z.string(),
+    brand: z.string(),
+    date: z.coerce.date(),
+    local: z.string(),
+    category: z.nativeEnum(Category),
+  })
+
+  const body: Record<string, unknown> = {}
+
+  let imageUrl = ''
+
+  for await (const part of parts) {
+    if (part.type === 'file') {
+      const file = part
+      const uploadImageToS3 = new Upload({
+        client: r2,
+        leavePartsOnError: false,
+        params: {
+          Bucket: process.env.AWS_BUCKET,
+          Key: file?.filename,
+          Body: file?.file,
+          ContentType: 'image/png',
+        },
+      })
+
+      const uploadedImage = await uploadImageToS3.done()
+
+      imageUrl = uploadedImage.Location as string
+    } else {
+      body[part.fieldname] = part.value
+    }
+  }
+
+  const { brand, category, color, date, local, name, value } = objectBody.parse(body)
+
+  const userId = req.headers.userId
+
+  if (!userId) return
+
+  await prisma.objects.create({
+    data: {
+      brand,
+      category, 
+      color,
+      date,
+      local,
+      name,
+      value,
+      imageUrl
+    }
+  })
+}
