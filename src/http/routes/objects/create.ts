@@ -4,6 +4,7 @@ import { Category } from '@prisma/client'
 import { Upload } from "@aws-sdk/lib-storage";
 import { r2 } from "../../../lib/cloudflare";
 import { prisma } from "../../../lib/prisma";
+import { randomUUID } from "crypto";
 
 export async function handleCreateObject(req: FastifyRequest, res: FastifyReply) {
   const parts = req.parts()
@@ -20,7 +21,7 @@ export async function handleCreateObject(req: FastifyRequest, res: FastifyReply)
 
   const body: Record<string, unknown> = {}
 
-  let imageUrl = ''
+  let imageKey = ''
 
   for await (const part of parts) {
     if (part.type === 'file') {
@@ -29,8 +30,8 @@ export async function handleCreateObject(req: FastifyRequest, res: FastifyReply)
         client: r2,
         leavePartsOnError: false,
         params: {
-          Bucket: process.env.AWS_BUCKET,
-          Key: file?.filename,
+          Bucket: process.env.R2_BUCKET,
+          Key: randomUUID().concat(file?.filename),
           Body: file?.file,
           ContentType: 'image/png',
         },
@@ -38,7 +39,7 @@ export async function handleCreateObject(req: FastifyRequest, res: FastifyReply)
 
       const uploadedImage = await uploadImageToS3.done()
 
-      imageUrl = uploadedImage.Location as string
+      imageKey = uploadedImage.Key as string
     } else {
       body[part.fieldname] = part.value
     }
@@ -48,9 +49,9 @@ export async function handleCreateObject(req: FastifyRequest, res: FastifyReply)
 
   const userId = req.headers.userId
 
-  if (!userId) return
+  // if (!userId) return
 
-  await prisma.objects.create({
+  const createdObject = await prisma.objects.create({
     data: {
       brand,
       category, 
@@ -59,7 +60,9 @@ export async function handleCreateObject(req: FastifyRequest, res: FastifyReply)
       local,
       name,
       value,
-      imageUrl
+      imageKey
     }
   })
+
+  return res.send(createdObject)
 }

@@ -30,7 +30,7 @@ model Objects {
   date     DateTime
   local    String
   category Category
-  imageUrl String?
+  imageKey String?
 }
 
 enum Category {

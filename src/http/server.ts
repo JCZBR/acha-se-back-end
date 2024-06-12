@@ -1,6 +1,7 @@
 import fastify from 'fastify'
 import multipart from '@fastify/multipart'
 import cors from '@fastify/cors'
+import { objectsHandler } from './routes/objects'
 
 const server = fastify()
 
@@ -14,6 +15,8 @@ server.register(multipart, {
     fileSize: 1024000000,
   },
 })
+
+server.register(objectsHandler, { prefix: "/objects" })
 
 server.listen({ port: 8080 }, (err, address) => {
   if (err) {
