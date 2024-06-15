@@ -22,15 +22,27 @@ model User {
 }
 
 model Objects {
+  id           String      @id @default(uuid())
+  name         String
+  color        String
+  value        String
+  brand        String
+  date         DateTime    @default(now())
+  local        String
+  category     Category
+  imageKey     String?
+  devolution   Devolution?
+  devolutionId String?
+}
+
+model Devolution {
   id       String   @id @default(uuid())
   name     String
-  color    String
-  value    String
-  brand    String
-  date     DateTime
-  local    String
-  category Category
-  imageKey String?
+  rg       String
+  cpf      String
+  date     DateTime @default(now())
+  object   Objects  @relation(fields: [objectId], references: [id])
+  objectId String   @unique
 }
 
 enum Category {

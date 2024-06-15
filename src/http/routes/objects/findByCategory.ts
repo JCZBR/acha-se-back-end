@@ -14,19 +14,24 @@ export async function handleFindObjectsByCategory(req: FastifyRequest, res: Fast
 
   let objects: Objects[] = []
 
-  if(category){
-    const categoryFilter = 
-    typeof category === 'string' ? new Array(category) : category
+  if (category) {
+    const categoryFilter =
+      typeof category === 'string' ? new Array(category) : category
 
     objects = await prisma.objects.findMany({
       where: {
         category: {
           in: categoryFilter
-        }
+        },
+        devolution: null
       }
     })
   } else {
-    objects = await prisma.objects.findMany()
+    objects = await prisma.objects.findMany({
+      where: {
+          devolution: null
+      }
+    })
   }
 
   const returnArr = []
