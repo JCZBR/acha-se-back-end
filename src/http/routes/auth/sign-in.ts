@@ -19,13 +19,17 @@ export async function handleSignIn(req: FastifyRequest, res: FastifyReply) {
   })
 
   if (!user) {
-    throw new Error('Invalid credentials')
+    return res.status(400).send({
+      message: "invalid credentials"
+    })
   }
 
   const matchPassword = await bcrypt.compare(password, user.password)
 
   if (!matchPassword) {
-    throw new Error('Invalid credentials')
+    return res.status(400).send({
+      message: "invalid credentials"
+    })
   }
 
   const token = jsonwebtoken.sign(user.id, process.env.JWT_PASS ?? '')
