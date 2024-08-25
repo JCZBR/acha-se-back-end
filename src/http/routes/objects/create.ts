@@ -8,6 +8,22 @@ import { randomUUID } from "crypto";
 
 export async function handleCreateObject(req: FastifyRequest, res: FastifyReply) {
   const parts = req.parts()
+  let hasFile = false;
+  for await (const part of parts) {
+    if (part.type === 'file') {
+      hasFile = true;
+    }
+  }
+
+  if (!hasFile) {
+    res.status(400).send({
+      error: 'No file uploaded'
+    });
+    return;
+  }
+ 
+    
+  
 
   const objectBody = z.object({
     name: z.string(),
