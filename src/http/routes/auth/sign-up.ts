@@ -15,7 +15,17 @@ export async function handleSignUp(req: FastifyRequest, res: FastifyReply) {
   const { name, email, password, phoneNumber } = signUpBody.parse(
     req.body,
   )
-
+  const userExist = await prisma.user.findUnique({
+    where:{
+      email
+    }
+  })
+  if (userExist){
+    return  res.status(400).send({
+      message: "User already exists"
+    })
+  }
+  
   const hashedPassword = await bcrypt.hash(password, 8)
 
   const created = await prisma.user.create({
