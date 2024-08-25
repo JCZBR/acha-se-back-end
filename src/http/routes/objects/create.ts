@@ -9,22 +9,6 @@ import { randomUUID } from "crypto";
 export async function handleCreateObject(req: FastifyRequest, res: FastifyReply) {
   const parts = req.parts()
   let hasFile = false;
-  for await (const part of parts) {
-    if (part.type === 'file') {
-      hasFile = true;
-    }
-  }
-
-  if (!hasFile) {
-    res.status(400).send({
-      error: 'No file uploaded'
-    });
-    return;
-  }
- 
-    
-  
-
   const objectBody = z.object({
     name: z.string(),
     color: z.string(),
@@ -41,6 +25,7 @@ export async function handleCreateObject(req: FastifyRequest, res: FastifyReply)
 
   for await (const part of parts) {
     if (part.type === 'file') {
+      hasFile = true
       const file = part
       const uploadImageToS3 = new Upload({
         client: r2,
@@ -52,13 +37,18 @@ export async function handleCreateObject(req: FastifyRequest, res: FastifyReply)
           ContentType: 'image/png',
         },
       })
-
+      
       const uploadedImage = await uploadImageToS3.done()
 
       imageKey = uploadedImage.Key as string
     } else {
       body[part.fieldname] = part.value
     }
+  }
+  if(!hasFile){
+    return res.status(400).send({
+      message:"Image missing"
+    })
   }
 
   const { brand, category, color, date, local, name, value } = objectBody.parse(body)
